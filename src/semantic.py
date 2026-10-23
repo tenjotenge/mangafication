@@ -69,8 +69,9 @@ def render(image, ink=0.45, contour=0.55, detail=0.55):
             continue
         values = smooth[region]
         median = np.median(values)
-        if class_id == 2:  # Preserve blonde hair as white and dark hair as ink.
-            cutoff = np.percentile(values, (10 + 30 * ink) if median > 130 else (82 + 12 * ink))
+        if class_id == 2:  # Keep blonde and midtone hair highlights as paper.
+            coverage = (10 + 30 * ink) if median > 130 else ((35 + 20 * ink) if median > 55 else (82 + 12 * ink))
+            cutoff = np.percentile(values, coverage)
         elif class_id in (11, 12, 13, 14, 15):  # Keep skin as white negative space.
             cutoff = np.percentile(values, 8 + 22 * ink)
         elif median < 35:  # Nearly black cloth: solid mass with narrow highlights.
@@ -97,6 +98,16 @@ def render(image, ink=0.45, contour=0.55, detail=0.55):
     elif width > 1:
         edges = cv2.dilate(edges, np.ones((width, width), np.uint8))
     combined = cv2.bitwise_or(shadow, edges)
+    # Thin white strokes reveal low-contrast folds inside black fabric. CLAHE
+    # acts only as an edge detector; the exported result is still strictly binary.
+    enhanced = cv2.createCLAHE(clipLimit=1.5, tileGridSize=(8, 8)).apply(smooth)
+    fold_edges = cv2.Canny(enhanced, int(60 + 40*(1-detail)), int(125 + 60*(1-detail)))
+    fabric = subject & ~np.isin(labels, (2, 11, 12, 13, 14, 15)) & (smooth < 105)
+    relief = (fold_edges > 0) & fabric & (shadow > 0)
+    count, components, stats, _ = cv2.connectedComponentsWithStats(relief.astype(np.uint8), 8)
+    keep = stats[:, cv2.CC_STAT_AREA] >= 12
+    keep[0] = False
+    combined[keep[components]] = 0
     # White relief separates dark clothing from an equally dark background.
     inner_border = subject & ~cv2.erode(subject.astype(np.uint8), np.ones((3, 3), np.uint8)).astype(bool)
     dark_outside = cv2.dilate((bg & (shadow > 0)).astype(np.uint8), np.ones((3, 3), np.uint8)).astype(bool)
