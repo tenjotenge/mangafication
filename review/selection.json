@@ -1,0 +1,12 @@
+[
+  {"key": "0001642", "source": "data/normalized/0001642_0b17251a2916.png", "baseline": "data/option_b/0001642_0b17251a2916.png", "case": "pale tailoring on dark runway"},
+  {"key": "0006265", "source": "data/normalized/0006265_c422e905fa2b.png", "baseline": "data/option_b/0006265_c422e905fa2b.png", "case": "black dress with white draped cape"},
+  {"key": "0009103", "source": "data/normalized/0009103_a060fc807b2f.png", "baseline": "data/option_b/0009103_a060fc807b2f.png", "case": "dark teal tailoring on pale backdrop"},
+  {"key": "0015571", "source": "data/normalized/0015571_24ff9fc4e25b.png", "baseline": "data/option_b/0015571_24ff9fc4e25b.png", "case": "angular sculptural headpiece"},
+  {"key": "0020479", "source": "data/normalized/0020479_3a01fe4703a5.png", "baseline": "data/option_b/0020479_3a01fe4703a5.png", "case": "check patterned jacket"},
+  {"key": "0024975", "source": "data/normalized/0024975_95e31fd8b9ef.png", "baseline": "data/option_b/0024975_95e31fd8b9ef.png", "case": "pale textured coat under blue lighting"},
+  {"key": "0031361", "source": "data/normalized/0031361_fd88a768b203.png", "baseline": "data/option_b/0031361_fd88a768b203.png", "case": "asymmetric black suit and busy runway"},
+  {"key": "0040264", "source": "data/normalized/0040264_359da0fe2b2a.png", "baseline": "data/option_b/0040264_359da0fe2b2a.png", "case": "sheer black dress against black backdrop"},
+  {"key": "0048938", "source": "data/normalized/0048938_08853b8ff177.png", "baseline": "data/option_b/0048938_08853b8ff177.png", "case": "white architectural dress and second model"},
+  {"key": "0069551", "source": "data/normalized/0069551_161fa3f7d933.png", "baseline": "data/option_b/0069551_161fa3f7d933.png", "case": "black draped dress on white backdrop"}
+]
