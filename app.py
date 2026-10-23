@@ -13,10 +13,10 @@ def run(image, method, ink, contour, detail):
     if image is None:
         raise gr.Error('Select an image first.')
     original = Image.fromarray(image).convert('RGB')
-    variants = {name: process(original, name, ink, contour, detail)[0] for name in METHODS}
-    if MODEL_PATH.exists():
-        variants[SEMANTIC_METHOD] = process(original, SEMANTIC_METHOD, ink, contour, detail)[0]
     result, shadows, contours = process(original, method, ink, contour, detail)
+    variants = {name: (result if name == method else process(original, name, ink, contour, detail)[0]) for name in METHODS}
+    if MODEL_PATH.exists():
+        variants[SEMANTIC_METHOD] = result if method == SEMANTIC_METHOD else process(original, SEMANTIC_METHOD, ink, contour, detail)[0]
     export = Path(tempfile.mkdtemp(prefix='mangafication-'))
     for name, output in [('binary', result), ('shadows', shadows), ('contours', contours)]:
         output.save(export / f'{name}.png')

@@ -48,3 +48,5 @@ python src/prepare_dataset.py --max-side 1024 --semantic
 ```
 
 The last command batch-exports `data/option_b/`, `data/masks/semantic_shadows/`, and `data/masks/semantic_contours/`, along with comparison sheets and the split files. The Gradio UI offers semantic mode when the model is present. The model is [mattmdjaga/segformer_b2_clothes](https://huggingface.co/mattmdjaga/segformer_b2_clothes), revision `584abc1e1d260e23c0fc627c5217a09b2b461046`; review its model card and terms before distributing the model or outputs. Weights are never committed to Git.
+
+For a faster resumable Option B pass after normalization, use `python src/render_option_b.py`. It skips complete exports and creates original-versus-Option B comparison sheets in `data/option_b/comparisons/`.

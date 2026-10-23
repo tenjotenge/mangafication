@@ -11,6 +11,12 @@ from PIL import Image, ImageOps
 from baseline import process, contact_sheet, METHODS
 
 
+def save_png(image, path):
+    temporary = path.with_name(path.stem + '.tmp.png')
+    image.save(temporary)
+    temporary.replace(path)
+
+
 def dhash(image):
     gray = ImageOps.grayscale(image).resize((17, 16), Image.Resampling.LANCZOS)
     pixels = np.asarray(gray)
@@ -62,18 +68,18 @@ def main():
             image.thumbnail((args.max_side, args.max_side), Image.Resampling.LANCZOS)
             name = Path(path).stem
             normalized = Path('data/normalized') / f'{name}.png'
-            image.save(normalized)
+            save_png(image, normalized)
             output, shadows, contours = process(image)
-            shadows.save(Path('data/masks/shadows') / f'{name}.png')
-            contours.save(Path('data/masks/contours') / f'{name}.png')
+            save_png(shadows, Path('data/masks/shadows') / f'{name}.png')
+            save_png(contours, Path('data/masks/contours') / f'{name}.png')
             variants = {method: process(image, method)[0] for method in METHODS}
             if args.semantic:
                 binary, guided_shadows, guided_contours = process(image, 'semantic')
-                binary.save(Path('data/option_b') / f'{name}.png')
-                guided_shadows.save(Path('data/masks/semantic_shadows') / f'{name}.png')
-                guided_contours.save(Path('data/masks/semantic_contours') / f'{name}.png')
+                save_png(binary, Path('data/option_b') / f'{name}.png')
+                save_png(guided_shadows, Path('data/masks/semantic_shadows') / f'{name}.png')
+                save_png(guided_contours, Path('data/masks/semantic_contours') / f'{name}.png')
                 variants['semantic'] = binary
-            contact_sheet(image, variants).save(Path('data/comparisons') / f'{name}.png')
+            save_png(contact_sheet(image, variants), Path('data/comparisons') / f'{name}.png')
             items.append({'id': name, 'raw': path, 'normalized': str(normalized),
                           'sha256': hashlib.sha256(Path(path).read_bytes()).hexdigest(),
                           'dhash': dhash(original), 'metadata': record['metadata']})
