@@ -7,6 +7,7 @@ import numpy as np
 from PIL import Image, ImageDraw
 
 METHODS = ('global', 'adaptive', 'color', 'composite')
+SEMANTIC_METHOD = 'semantic'
 
 
 def _clean(mask, min_area=12):
@@ -18,6 +19,12 @@ def _clean(mask, min_area=12):
 
 def process(image, method='composite', ink=0.45, contour=0.55, detail=0.55):
     """Return binary output, shadow mask, contour mask; 0 is ink, 255 is paper."""
+    if method == SEMANTIC_METHOD:
+        try:
+            from .semantic import render
+        except ImportError:  # direct script invocation
+            from semantic import render
+        return render(image, ink, contour, detail)
     if method not in METHODS:
         raise ValueError(f'Unknown method: {method}')
     ink, contour, detail = [float(np.clip(v, 0, 1)) for v in (ink, contour, detail)]
@@ -91,6 +98,7 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('image', type=Path)
     parser.add_argument('--output', type=Path, default=Path('data/comparisons'))
+    parser.add_argument('--semantic', action='store_true', help='Include optional pretrained semantic variant')
     parser.add_argument('--ink', type=float, default=0.45)
     parser.add_argument('--contour', type=float, default=0.55)
     parser.add_argument('--detail', type=float, default=0.55)
@@ -98,13 +106,13 @@ def main():
     args.output.mkdir(parents=True, exist_ok=True)
     with Image.open(args.image) as image:
         variants = {}
-        for method in METHODS:
+        for method in METHODS + ((SEMANTIC_METHOD,) if args.semantic else ()):
             result, shadows, contours = process(image, method, args.ink, args.contour, args.detail)
             variants[method] = result
             result.save(args.output / f'{args.image.stem}_{method}.png')
-            if method == 'composite':
-                shadows.save(args.output / f'{args.image.stem}_shadows.png')
-                contours.save(args.output / f'{args.image.stem}_contours.png')
+            if method in ('composite', SEMANTIC_METHOD):
+                shadows.save(args.output / f'{args.image.stem}_{method}_shadows.png')
+                contours.save(args.output / f'{args.image.stem}_{method}_contours.png')
         contact_sheet(image, variants).save(args.output / f'{args.image.stem}_comparison.png')
 
 

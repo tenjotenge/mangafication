@@ -38,6 +38,7 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--manifest', type=Path, default=Path('data/raw/manifest.jsonl'))
     parser.add_argument('--max-side', type=int, default=1536)
+    parser.add_argument('--semantic', action='store_true', help='Also export pretrained Option B outputs')
     parser.add_argument('--seed', type=int, default=42)
     parser.add_argument('--test-fraction', type=float, default=0.18)
     parser.add_argument('--val-fraction', type=float, default=0.12)
@@ -49,6 +50,8 @@ def main():
     good = [r for r in records if r['status'] in ('downloaded', 'existing', 'duplicate_url') and Path(r['path']).exists()]
     unique = {r['path']: r for r in good}
     locations = [Path('data/normalized'), Path('data/masks/shadows'), Path('data/masks/contours'), Path('data/comparisons'), Path('data/splits')]
+    if args.semantic:
+        locations += [Path('data/option_b'), Path('data/masks/semantic_shadows'), Path('data/masks/semantic_contours')]
     for directory in locations:
         directory.mkdir(parents=True, exist_ok=True)
     items = []
@@ -64,6 +67,12 @@ def main():
             shadows.save(Path('data/masks/shadows') / f'{name}.png')
             contours.save(Path('data/masks/contours') / f'{name}.png')
             variants = {method: process(image, method)[0] for method in METHODS}
+            if args.semantic:
+                binary, guided_shadows, guided_contours = process(image, 'semantic')
+                binary.save(Path('data/option_b') / f'{name}.png')
+                guided_shadows.save(Path('data/masks/semantic_shadows') / f'{name}.png')
+                guided_contours.save(Path('data/masks/semantic_contours') / f'{name}.png')
+                variants['semantic'] = binary
             contact_sheet(image, variants).save(Path('data/comparisons') / f'{name}.png')
             items.append({'id': name, 'raw': path, 'normalized': str(normalized),
                           'sha256': hashlib.sha256(Path(path).read_bytes()).hexdigest(),

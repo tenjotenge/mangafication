@@ -33,3 +33,18 @@ The UI opens at `http://127.0.0.1:7860`. It compares global thresholding, adapti
 ## Learned Option A plan
 
 Runway photos are unpaired inputs, not manga labels. Collect artist-created or artist-approved binary targets with agreed conventions for shadows, lines, fabric and faces. Begin with a pretrained lightweight vision encoder and a small decoder that predicts separate shadow and contour logits; combine them with an explicit binary threshold. The deterministic masks can be conditioning inputs or weak supervision, but should not be treated as ground truth. Split by duplicate group before annotation or training. Start with frozen encoder features and small crops on the laptop; move full-resolution training to the NVIDIA desktop. Evaluate with held-out photographs using structure preservation and artist review, including comparison against Option B.
+
+## Option B semantic prototype
+
+The earlier thresholds miss black clothing against a black background. The optional `semantic` mode uses a pretrained 18-class human/clothing parser to preserve the person and garment regions, then applies class-aware binary shadow thresholds, high-resolution contours, and a white relief line where black clothing meets a black backdrop. This is a structural prototype; unusual runway pieces and fine feathers still need review and possibly manual correction.
+
+Install only the new CPU runtime into the existing environment, then download the pinned model into ignored local data:
+
+```bash
+python -m pip install onnxruntime
+python src/download_model.py
+python src/baseline.py path/to/photo.jpg --semantic
+python src/prepare_dataset.py --max-side 1024 --semantic
+```
+
+The last command batch-exports `data/option_b/`, `data/masks/semantic_shadows/`, and `data/masks/semantic_contours/`, along with comparison sheets and the split files. The Gradio UI offers semantic mode when the model is present. The model is [mattmdjaga/segformer_b2_clothes](https://huggingface.co/mattmdjaga/segformer_b2_clothes), revision `584abc1e1d260e23c0fc627c5217a09b2b461046`; review its model card and terms before distributing the model or outputs. Weights are never committed to Git.

@@ -5,7 +5,8 @@ import tempfile
 import gradio as gr
 from PIL import Image
 
-from src.baseline import METHODS, process, contact_sheet
+from src.baseline import METHODS, SEMANTIC_METHOD, process, contact_sheet
+from src.semantic import MODEL_PATH
 
 
 def run(image, method, ink, contour, detail):
@@ -13,6 +14,8 @@ def run(image, method, ink, contour, detail):
         raise gr.Error('Select an image first.')
     original = Image.fromarray(image).convert('RGB')
     variants = {name: process(original, name, ink, contour, detail)[0] for name in METHODS}
+    if MODEL_PATH.exists():
+        variants[SEMANTIC_METHOD] = process(original, SEMANTIC_METHOD, ink, contour, detail)[0]
     result, shadows, contours = process(original, method, ink, contour, detail)
     export = Path(tempfile.mkdtemp(prefix='mangafication-'))
     for name, output in [('binary', result), ('shadows', shadows), ('contours', contours)]:
@@ -25,7 +28,7 @@ with gr.Blocks(title='Mangafication baseline') as demo:
     with gr.Row():
         source = gr.Image(label='Local photograph', type='numpy', sources=['upload'])
         result = gr.Image(label='Strictly black and white output')
-    method = gr.Dropdown(METHODS, value='composite', label='Method')
+    method = gr.Dropdown(METHODS + (SEMANTIC_METHOD,), value=SEMANTIC_METHOD if MODEL_PATH.exists() else 'composite', label='Method')
     ink = gr.Slider(0, 1, value=0.45, step=0.01, label='Black ink coverage')
     contour = gr.Slider(0, 1, value=0.55, step=0.01, label='Contour strength')
     detail = gr.Slider(0, 1, value=0.55, step=0.01, label='Detail preservation')

@@ -10,3 +10,8 @@ data/targets/
 data/splits/
 data/comparisons/
 .repo/
+data/models/
+data/reference/
+data/option_b/
+data/masks/semantic_shadows/
+data/masks/semantic_contours/
