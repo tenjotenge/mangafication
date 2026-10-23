@@ -48,14 +48,19 @@ def render(image, ink=0.45, contour=0.55, detail=0.55):
     smooth = cv2.bilateralFilter(lum, 7, 55, 55)
     subject = labels != 0
     shadow = np.zeros(lum.shape, np.uint8)
-    # Background may be dark or light, but is processed separately from clothing.
+    # Classify the stage from its border, where the foreground model occupies
+    # relatively little area. This avoids mistaking a bright outfit for scenery.
     bg = ~subject
     if bg.any():
-        background_median = np.median(smooth[bg])
-        coverage = (35 + 30 * ink) if background_median < 100 else (7 + 20 * ink)
-        cutoff = np.percentile(smooth[bg], coverage)
-        bg_shadow = cv2.GaussianBlur(smooth, (7, 7), 0) < cutoff
-        shadow[bg & bg_shadow] = 255
+        height, width = smooth.shape
+        border = np.concatenate((smooth[:max(1, height//8)].ravel(),
+                                 smooth[:, :max(1, width//10)].ravel(),
+                                 smooth[:, -max(1, width//10):].ravel()))
+        if np.median(border) < 90:
+            # A flat black stage is easier to draw from than photographic
+            # pools of light or irregular white holes around dark clothing.
+            shadow[bg] = 255
+        # Light stages remain white; their edge lines are added below.
     for class_id in np.unique(labels):
         if class_id == 0:
             continue

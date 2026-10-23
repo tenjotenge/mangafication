@@ -39,19 +39,20 @@ def main():
     SHEETS.mkdir(parents=True, exist_ok=True)
     rows = json.loads(SELECTION.read_text())
     metrics = []
-    overview = Image.new('RGB', (args.cell_width * 4, (args.cell_height + 32) * len(rows)), 'white')
+    columns = 5
+    overview = Image.new('RGB', (args.cell_width * columns, (args.cell_height + 32) * len(rows)), 'white')
     for row_index, row in enumerate(rows):
         key = row['key']
-        paths = [ROOT / row['source'], ROOT / row['baseline']]
+        paths = [ROOT / row['source'], ROOT / row['baseline'], ROOT / 'data/review_targets/refined' / f'{key}_binary.png']
         for variant in ('A', 'B'):
             raw = GENERATED / f'{key}_{variant}_raw.png'
             binary = GENERATED / f'{key}_{variant}.png'
             coverage = binary_copy(raw, binary)
             paths.append(binary)
             metrics.append({'key': key, 'variant': variant, 'black_coverage': round(coverage, 4)})
-        sheet = Image.new('RGB', (args.cell_width * 4, args.cell_height + 32), 'white')
+        sheet = Image.new('RGB', (args.cell_width * columns, args.cell_height + 32), 'white')
         draw = ImageDraw.Draw(sheet)
-        for column, (label, path) in enumerate(zip(('Original', 'Current Option B', 'Generated A', 'Generated B'), paths)):
+        for column, (label, path) in enumerate(zip(('Original', 'Previous Option B', 'Refined Option B', 'Generated A', 'Generated B'), paths)):
             x = column * args.cell_width
             draw.text((x+8, 8), f'{key}  {label}', fill='black')
             sheet.paste(fitted(path, args.cell_width, args.cell_height), (x, 32))
